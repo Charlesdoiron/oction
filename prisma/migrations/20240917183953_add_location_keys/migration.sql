@@ -1,0 +1,7 @@
+-- AlterTable
+ALTER TABLE "Ad" ADD COLUMN     "address" TEXT,
+ADD COLUMN     "city" TEXT,
+ADD COLUMN     "lat" DOUBLE PRECISION,
+ADD COLUMN     "lon" DOUBLE PRECISION,
+ADD COLUMN     "postCode" TEXT,
+ALTER COLUMN "region" DROP NOT NULL;
