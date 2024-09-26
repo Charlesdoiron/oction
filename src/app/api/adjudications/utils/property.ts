@@ -93,6 +93,7 @@ async function scrapePageLinks(
         await propertyPage.goto(adjudicationUrl, {
           waitUntil: "domcontentloaded",
         });
+
         const propertyDetails = await scrapeDetail(propertyPage);
         if (propertyDetails) {
           const existingAd = await prisma.ad.findUnique({

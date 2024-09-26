@@ -24,11 +24,12 @@ export const maxDuration = 60; // This function can run for a maximum of 60 seco
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  // const browser = await PuppeteerService.getBrowser();
   const browser = await puppeteer.launch({
     ignoreDefaultArgs: ["--enable-automation"],
     args: isDev
       ? [
+          "--no-sandbox",
+          "--disable-setuid-sandbox",
           "--disable-blink-features=AutomationControlled",
           "--disable-features=site-per-process",
           "-disable-site-isolation-trials",
@@ -39,7 +40,7 @@ export async function GET() {
       ? localExecutablePath
       : await chromium.executablePath(remoteExecutablePath),
     headless: true,
-    debuggingPort: isDev ? 9222 : undefined,
+    timeout: 60000, // Increase timeout to 60 seconds
   });
   const metaRegions = [
     {
