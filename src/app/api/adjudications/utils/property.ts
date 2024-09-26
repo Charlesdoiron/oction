@@ -6,11 +6,12 @@ import { transformPrice } from "@/app/utils/parse";
 // Define the structure of property details
 interface PropertyDetails {
   id: string;
-  date: string;
+  auction_date: string;
+  visit_date: string;
   type: string;
   description: string;
-  adjudication: string;
-  price: string;
+  adjudication_price: string;
+  starting_price: string;
   location: string;
   url?: string;
   tribunal: string;
@@ -24,13 +25,21 @@ const DELAY_BETWEEN_PAGES = 10; // 2 seconds delay between pages
 export async function scrapePropertyDetails(
   browser: Browser,
   url: string,
-  region: string,
-  totalPages: number
+  region: string
 ): Promise<{ results: string[]; duration: number; total: number }> {
   const startTime = Date.now();
   const results: string[] = [];
 
   const page = await browser.newPage();
+  // get the total number of pages
+  await page.goto(url, { waitUntil: "domcontentloaded" });
+  const totalPages = await page.evaluate(() => {
+    return parseInt(
+      document
+        .querySelector(".PageTotal")
+        ?.textContent?.replace(/[^0-9]/g, "") || "0"
+    );
+  });
 
   try {
     for (let currentPage = 1; currentPage <= totalPages; currentPage++) {
@@ -94,10 +103,14 @@ async function scrapePageLinks(
             await prisma.ad.create({
               data: {
                 ...propertyDetails,
-                price: transformPrice(propertyDetails.price),
-                adjudication: transformPrice(propertyDetails.adjudication),
+                starting_price: transformPrice(propertyDetails.starting_price),
+                adjudication_price: transformPrice(
+                  propertyDetails.adjudication_price
+                ),
                 url: adjudicationUrl,
                 region,
+                auction_date: propertyDetails.auction_date,
+                visit_date: propertyDetails.visit_date,
               },
             });
             results.push(propertyDetails.id);
@@ -142,28 +155,36 @@ async function scrapeDetail(page: Page): Promise<PropertyDetails> {
         .filter(Boolean)
         .join(", ")
         .replace(/\s+/g, " ") || "";
-    const date = document.querySelector(".Date")?.textContent?.trim() || "";
+    const auction_date =
+      document.querySelector(".Date")?.textContent?.trim() || "";
     const type =
       document.querySelector(".FirstSousLot h2")?.textContent?.trim() || "";
     const description =
       document.querySelector(".FirstSousLot p")?.textContent?.trim() || "";
-    const adjudication =
+    const adjudication_price =
+      document.querySelector(".Lot h4")?.textContent?.trim() || "";
+    const starting_price =
       document.querySelector(".Lot h3")?.textContent?.trim() || "";
-    const price = document.querySelector(".Lot h4")?.textContent?.trim() || "";
     const location =
       (document.querySelector(".Location .Map a") as HTMLAnchorElement)?.href ||
       "";
+    const visit_date =
+      document
+        .querySelector(".Visits")
+        ?.textContent?.trim()
+        .replace("Visite sur place ", "") || "";
 
     return {
-      date,
+      auction_date,
       type,
       description,
-      adjudication,
-      price,
+      adjudication_price,
+      starting_price,
       location,
       tribunal,
       id,
       lawyer,
+      visit_date,
     };
   });
 }

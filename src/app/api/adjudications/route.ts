@@ -6,40 +6,62 @@ export async function GET() {
   const browser = await PuppeteerService.getBrowser();
 
   const metaRegions = [
-    // {
-    //   url: "https://www.licitor.com/ventes-aux-encheres-immobilieres/outre-mer/historique-des-adjudications.html",
-    //   region: "outre-mer",
-    //   totalPages: 4,
-    // },
-    // {
-    //   url: "https://www.licitor.com/ventes-aux-encheres-immobilieres/centre-loire-limousin/historique-des-adjudications.html",
-    //   region: "centre-loire-limousin",
-    //   totalPages: 35,
-    // },
-    // {
-    //   url: "https://www.licitor.com/ventes-aux-encheres-immobilieres/bretagne-grand-ouest/historique-des-adjudications.html",
-    //   region: "bretagne-grand-ouest",
-    //   totalPages: 131,
-    // },
-    // {
-    //   url: "https://www.licitor.com/ventes-aux-encheres-immobilieres/regions-du-nord-est/historique-des-adjudications.html",
-    //   region: "regions-du-nord-est",
-    //   totalPages: 246,
-    // },
-    // {
-    //   url: "https://www.licitor.com/ventes-aux-encheres-immobilieres/sud-ouest-pyrenees/historique-des-adjudications.html",
-    //   region: "sud-ouest-pyrenees",
-    //   totalPages: 323,
-    // },
-    // {
-    //   url: "https://www.licitor.com/ventes-aux-encheres-immobilieres/sud-est-mediterrannee/historique-des-adjudications.html",
-    //   region: "sud-est-mediterrannee",
-    //   totalPages: 2030,
-    // },
+    {
+      url: "https://www.licitor.com/ventes-aux-encheres-immobilieres/outre-mer/historique-des-adjudications.html",
+      region: "outre-mer",
+    },
+    {
+      url: "https://www.licitor.com/ventes-aux-encheres-immobilieres/outre-mer/prochaines-ventes.html",
+      region: "outre-mer",
+    },
+
+    {
+      url: "https://www.licitor.com/ventes-aux-encheres-immobilieres/centre-loire-limousin/historique-des-adjudications.html",
+      region: "centre-loire-limousin",
+    },
+    {
+      url: "https://www.licitor.com/ventes-aux-encheres-immobilieres/centre-loire-limousin/prochaines-ventes.html",
+      region: "centre-loire-limousin",
+    },
+    {
+      url: "https://www.licitor.com/ventes-aux-encheres-immobilieres/bretagne-grand-ouest/historique-des-adjudications.html",
+      region: "bretagne-grand-ouest",
+    },
+    {
+      url: "https://www.licitor.com/ventes-aux-encheres-immobilieres/bretagne-grand-ouest/prochaines-ventes.html",
+      region: "bretagne-grand-ouest",
+    },
+    {
+      url: "https://www.licitor.com/ventes-aux-encheres-immobilieres/regions-du-nord-est/historique-des-adjudications.html",
+      region: "regions-du-nord-est",
+    },
+    {
+      url: "https://www.licitor.com/ventes-aux-encheres-immobilieres/regions-du-nord-est/prochaines-ventes.html",
+      region: "regions-du-nord-est",
+    },
+    {
+      url: "https://www.licitor.com/ventes-aux-encheres-immobilieres/sud-ouest-pyrenees/historique-des-adjudications.html",
+      region: "sud-ouest-pyrenees",
+    },
+    {
+      url: "https://www.licitor.com/ventes-aux-encheres-immobilieres/sud-ouest-pyrenees/prochaines-ventes.html",
+      region: "sud-ouest-pyrenees",
+    },
+    {
+      url: "https://www.licitor.com/ventes-aux-encheres-immobilieres/sud-est-mediterrannee/historique-des-adjudications.html",
+      region: "sud-est-mediterrannee",
+    },
+    {
+      url: "https://www.licitor.com/ventes-aux-encheres-immobilieres/sud-est-mediterrannee/prochaines-ventes.html",
+      region: "sud-est-mediterrannee",
+    },
     {
       url: "https://www.licitor.com/ventes-aux-encheres-immobilieres/paris-et-ile-de-france/historique-des-adjudications.html",
-      region: "paris-et-ile-de-france",
-      totalPages: 3124,
+      region: "ile-de-france",
+    },
+    {
+      url: "https://www.licitor.com/ventes-aux-encheres-immobilieres/paris-et-ile-de-france/prochaines-ventes.html",
+      region: "ile-de-france",
     },
   ];
 
@@ -50,8 +72,7 @@ export async function GET() {
         const { results, duration, total } = await scrapePropertyDetails(
           browser,
           metaRegion.url,
-          region,
-          metaRegion.totalPages
+          region
         );
         return { region, details: results, duration, total };
       })

@@ -15,23 +15,24 @@ datasource db {
 }
 
 model Ad {
-  id           String   @id
-  date         String
-  type         String
-  description  String
-  adjudication Int
-  price        Int
-  location     String
-  url          String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  tribunal     String
-  lawyer       String
-  region       String?
-  lat          Float?
-  lon          Float?
-  address      String?
-  city         String?
-  postCode     String?
-  cityCode     String?
+  id                 String    @id
+  auction_date       String?
+  visit_date         String?
+  type               String
+  description        String
+  adjudication_price Int?
+  starting_price     Int
+  location           String
+  url                String?
+  createdAt          DateTime? @default(now())
+  updatedAt          DateTime? @updatedAt
+  tribunal           String
+  lawyer             String
+  region             String?
+  lat                Float?
+  lon                Float?
+  address            String?
+  city               String?
+  postCode           String?
+  cityCode           String?
 }
