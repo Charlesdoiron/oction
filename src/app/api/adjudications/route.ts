@@ -1,10 +1,46 @@
-import { PuppeteerService } from "@/app/service/puppeteer.service";
+import { Browser } from "puppeteer-core";
+
+// import { PuppeteerService } from "@/app/service/puppeteer.service";
+import {
+  localExecutablePath,
+  isDev,
+  remoteExecutablePath,
+} from "@/app/utils/utils";
+const chromium = require("@sparticuz/chromium-min");
+
+// Importing Puppeteer core as default otherwise
+// it won't function correctly with "launch()"
+import puppeteer from "puppeteer-core";
+
+// You may want to change this if you're developing
+// on a platform different from macOS.
+// See https://github.com/vercel/og-image for a more resilient
+// system-agnostic options for Puppeteeer.
+
 import { NextResponse } from "next/server";
 import { scrapePropertyDetails } from "./utils/property";
 
-export async function GET() {
-  const browser = await PuppeteerService.getBrowser();
+export const maxDuration = 60; // This function can run for a maximum of 60 seconds (update by 2024-05-10)
+export const dynamic = "force-dynamic";
 
+export async function GET() {
+  // const browser = await PuppeteerService.getBrowser();
+  const browser = await puppeteer.launch({
+    ignoreDefaultArgs: ["--enable-automation"],
+    args: isDev
+      ? [
+          "--disable-blink-features=AutomationControlled",
+          "--disable-features=site-per-process",
+          "-disable-site-isolation-trials",
+        ]
+      : [...chromium.args, "--disable-blink-features=AutomationControlled"],
+    defaultViewport: { width: 1920, height: 1080 },
+    executablePath: isDev
+      ? localExecutablePath
+      : await chromium.executablePath(remoteExecutablePath),
+    headless: true,
+    debuggingPort: isDev ? 9222 : undefined,
+  });
   const metaRegions = [
     {
       url: "https://www.licitor.com/ventes-aux-encheres-immobilieres/outre-mer/historique-des-adjudications.html",
@@ -70,7 +106,7 @@ export async function GET() {
       metaRegions.map(async (metaRegion) => {
         const region = metaRegion.region;
         const { results, duration, total } = await scrapePropertyDetails(
-          browser,
+          browser as Browser,
           metaRegion.url,
           region
         );

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Page, Browser } from "puppeteer";
+import { Page, Browser } from "puppeteer-core";
 import prisma from "@/app/lib/prisma";
 import { transformPrice } from "@/app/utils/parse";
 

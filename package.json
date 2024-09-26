@@ -30,6 +30,8 @@
     "p-limit": "^6.1.0",
     "prisma": "^5.19.1",
     "puppeteer": "^23.3.0",
+    "@sparticuz/chromium-min": "^122.0.0",
+    "puppeteer-core": "22.5.0",
     "react": "^18",
     "react-dom": "^18",
     "react-leaflet": "^4.2.1",
