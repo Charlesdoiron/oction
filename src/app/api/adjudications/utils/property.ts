@@ -29,19 +29,13 @@ export async function scrapePropertyDetails(
 ): Promise<{ results: string[]; duration: number; total: number }> {
   const startTime = Date.now();
   const results: string[] = [];
-
-  const page = await browser.newPage();
-  // get the total number of pages
-  await page.goto(url, { waitUntil: "domcontentloaded" });
-  const totalPages = await page.evaluate(() => {
-    return parseInt(
-      document
-        .querySelector(".PageTotal")
-        ?.textContent?.replace(/[^0-9]/g, "") || "0"
-    );
-  });
+  let page: Page | null = null;
 
   try {
+    page = await browser.newPage();
+    await page.goto(url, { waitUntil: "domcontentloaded" });
+    const totalPages = await getTotalPages(page);
+
     for (let currentPage = 1; currentPage <= totalPages; currentPage++) {
       await scrapePageLinks(
         totalPages,
@@ -51,11 +45,12 @@ export async function scrapePropertyDetails(
         region,
         results
       );
-      // Add a delay between pages to be respectful to the server
       await new Promise((resolve) => setTimeout(resolve, DELAY_BETWEEN_PAGES));
     }
+  } catch (error) {
+    console.error("Error in scrapePropertyDetails:", error);
   } finally {
-    await page.close();
+    if (page) await page.close();
   }
 
   const endTime = Date.now();
@@ -74,65 +69,39 @@ async function scrapePageLinks(
 ): Promise<void> {
   try {
     await page.goto(url, { waitUntil: "domcontentloaded" });
-
-    const links = await page.evaluate(() =>
-      Array.from(document.querySelectorAll(".AdResults li a")).map(
-        (a) => (a as HTMLAnchorElement).href
-      )
+    const links = await getLinksFromPage(page);
+    console.log(
+      `Page ${currentPage}/${totalPages} - Found ${links.length} links`
     );
-    // log here the current Page + the number of links found and the number of links how allready exists in the database, and the number of links that will be scraped
-    console.log(`Page ${currentPage}/${totalPages}`);
 
-    let currentIdx = 1;
-    for (const href of links) {
-      const adjudicationUrl = href.startsWith("http")
-        ? href
-        : `${BASE_URL}${href}`;
-      const propertyPage = await page.browser().newPage();
+    for (let i = 0; i < links.length; i++) {
+      const adjudicationUrl = links[i].startsWith("http")
+        ? links[i]
+        : `${BASE_URL}${links[i]}`;
+      let propertyPage: Page | null = null;
+
       try {
+        propertyPage = await page.browser().newPage();
         await propertyPage.goto(adjudicationUrl, {
           waitUntil: "domcontentloaded",
         });
-
         const propertyDetails = await scrapeDetail(propertyPage);
-        if (propertyDetails) {
-          const existingAd = await prisma.ad.findUnique({
-            where: {
-              id: propertyDetails.id,
-              adjudication_price: {
-                not: null,
-              },
-            },
-          });
 
-          if (!existingAd) {
-            await prisma.ad.create({
-              data: {
-                ...propertyDetails,
-                starting_price: transformPrice(propertyDetails.starting_price),
-                adjudication_price: transformPrice(
-                  propertyDetails.adjudication_price
-                ),
-                url: adjudicationUrl,
-                region,
-                auction_date: propertyDetails.auction_date,
-                visit_date: propertyDetails.visit_date,
-              },
-            });
-            results.push(propertyDetails.id);
-            console.log(
-              `${currentIdx}/${links.length} - Add ${propertyDetails.id} in database`
-            );
-            currentIdx++;
-          } else {
-            console.group(`Duplicate found: ${propertyDetails.id}`);
-            console.dir(propertyDetails, { depth: null });
-            console.dir(existingAd, { depth: null });
-            console.groupEnd();
-          }
+        if (propertyDetails) {
+          await processPropertyDetails(
+            propertyDetails,
+            adjudicationUrl,
+            region,
+            results
+          );
+          console.log(
+            `${i + 1}/${links.length} - Processed ${propertyDetails.id}`
+          );
         }
+      } catch (error) {
+        console.error(`Error processing ${adjudicationUrl}:`, error);
       } finally {
-        await propertyPage.close();
+        if (propertyPage) await propertyPage.close();
       }
     }
   } catch (error) {
@@ -193,6 +162,61 @@ async function scrapeDetail(page: Page): Promise<PropertyDetails> {
       visit_date,
     };
   });
+}
+
+// New helper functions
+async function getTotalPages(page: Page): Promise<number> {
+  return page.evaluate(() => {
+    return parseInt(
+      document
+        .querySelector(".PageTotal")
+        ?.textContent?.replace(/[^0-9]/g, "") || "0"
+    );
+  });
+}
+
+async function getLinksFromPage(page: Page): Promise<string[]> {
+  return page.evaluate(() =>
+    Array.from(document.querySelectorAll(".AdResults li a")).map(
+      (a) => (a as HTMLAnchorElement).href
+    )
+  );
+}
+
+async function processPropertyDetails(
+  propertyDetails: PropertyDetails,
+  adjudicationUrl: string,
+  region: string,
+  results: string[]
+): Promise<void> {
+  const existingAd = await prisma.ad.findUnique({
+    where: {
+      id: propertyDetails.id,
+      adjudication_price: {
+        not: null,
+      },
+    },
+  });
+
+  if (!existingAd) {
+    await prisma.ad.create({
+      data: {
+        ...propertyDetails,
+        starting_price: transformPrice(propertyDetails.starting_price),
+        adjudication_price: transformPrice(propertyDetails.adjudication_price),
+        url: adjudicationUrl,
+        region,
+        auction_date: propertyDetails.auction_date,
+        visit_date: propertyDetails.visit_date,
+      },
+    });
+    results.push(propertyDetails.id);
+  } else {
+    console.group(`Duplicate found: ${propertyDetails.id}`);
+    console.dir(propertyDetails, { depth: null });
+    console.dir(existingAd, { depth: null });
+    console.groupEnd();
+  }
 }
 
 // let currentIdx = 1;

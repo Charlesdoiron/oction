@@ -103,16 +103,17 @@ export async function GET() {
   ];
 
   try {
-    const details = [];
-    for (const metaRegion of metaRegions) {
-      const region = metaRegion.region;
-      const { results, duration, total } = await scrapePropertyDetails(
-        browser as Browser,
-        metaRegion.url,
-        region
-      );
-      details.push({ region, details: results, duration, total });
-    }
+    const details = await Promise.all(
+      metaRegions.map(async (metaRegion) => {
+        const region = metaRegion.region;
+        const { results, duration, total } = await scrapePropertyDetails(
+          browser as Browser,
+          metaRegion.url,
+          region
+        );
+        return { region, details: results, duration, total };
+      })
+    );
 
     return NextResponse.json({
       ok: true,
@@ -126,6 +127,6 @@ export async function GET() {
       { status: 500 }
     );
   } finally {
-    await browser.close();
+    // await browser.close();
   }
 }
