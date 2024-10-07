@@ -97,7 +97,12 @@ async function scrapePageLinks(
         const propertyDetails = await scrapeDetail(propertyPage);
         if (propertyDetails) {
           const existingAd = await prisma.ad.findUnique({
-            where: { id: propertyDetails.id },
+            where: {
+              id: propertyDetails.id,
+              adjudication_price: {
+                not: null,
+              },
+            },
           });
 
           if (!existingAd) {
