@@ -1,4 +1,3 @@
 {
-  "/api/adjudications/route": "app/api/adjudications/route.js",
-  "/page": "app/page.js"
+  "/api/adjudications/route": "app/api/adjudications/route.js"
 }
