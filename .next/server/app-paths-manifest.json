@@ -1,3 +1,6 @@
 {
-  "/api/adjudications/route": "app/api/adjudications/route.js"
+  "/_not-found/page": "app/_not-found/page.js",
+  "/page": "app/page.js",
+  "/api/adjudications/route": "app/api/adjudications/route.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js"
 }
